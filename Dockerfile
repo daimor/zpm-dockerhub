@@ -6,7 +6,8 @@ FROM $IMAGE
 RUN \
   wget -q https://pm.community.intersystems.com/packages/zpm/latest/installer -O /tmp/zpm.xml && \
   mkdir /usr/irissys/mgr/zpm && \
-  iris start $ISC_PACKAGE_INSTANCENAME quietly && \
+  iris start $ISC_PACKAGE_INSTANCENAME quietly; \
+  cat /usr/irissys/mgr/messages.log; \
   /bin/echo -e \
     "set pNS(\"Globals\")=\"%DEFAULTDB\"\n" \
     "set sc=##class(Config.Namespaces).Create(\"%ALL\",.pNS)\n" \

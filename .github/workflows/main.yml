@@ -6,32 +6,52 @@ jobs:
   build:
     strategy:
       matrix:
-        image: [
-        "iris-community:2020.3.0.221.0",
-        "irishealth-community:2020.3.0.221.0",
-        "iris-community:2020.4.0.524.0",
-        "irishealth-community:2020.4.0.524.0",
-        "iris-ml-community:2020.3.0.302.0"
-        ]
+        image:
+          # # IRIS previous
+          # - "iris-community:2020.3.0.221.0"
+          # - "iris-community-arm64:2020.3.0.221.0"
+          # # IRIS latest
+          - "iris-community:2020.4.0.524.0"
+          - "iris-community-arm64:2020.4.0.524.0"
+          # # IRIS for Health previous
+          # - "irishealth-community:2020.3.0.221.0"
+          # - "irishealth-community-arm64:2020.3.0.221.0"
+          # # IRIS for Health latest
+          # - "irishealth-community:2020.4.0.524.0"
+          # - "irishealth-community-arm64:2020.4.0.524.0"
+          # # IRIS ML
+          # - "iris-ml-community:2020.3.0.304.0"
+          # # IRIS for Health ML
+          # - "irishealth-ml-community:2020.3.0.304.0"
     runs-on: ubuntu-latest
-    
     steps:
-    - uses: actions/checkout@master
-  
-    - name: build docker image for ${{ matrix.image }}
-      uses: nick-invision/retry@v2
-      with:
-        timeout_minutes: 10
-        max_attempts: 3
-        retry_on: timeout
-        command: docker build --build-arg IMAGE=store/intersystems/${{ matrix.image }} -t intersystemsdc/${{ matrix.image }}-zpm .
-    - name: inspect docker image size
-      run: |
-        docker history intersystemsdc/${{ matrix.image }}-zpm
-        docker images -f label=org.opencontainers.image.vendor=InterSystems
-    - name: push intersystemsdc/${{ matrix.image }}-zpm to docker hub 
-      if: github.event.repository.fork == false
-      run: |
-        docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-        docker push intersystemsdc/${{ matrix.image }}-zpm
-    
+      - uses: actions/checkout@master
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: latest
+      - name: build docker image for ${{ matrix.image }}
+        uses: nick-invision/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_on: timeout
+          command: |
+            IMAGE=containers.intersystems.com/intersystems/${{ matrix.image }}
+            [ -z ${IMAGE##*-arm64*} ] && PLATFORM=linux/arm64 || PLATFORM=linux/amd64
+            echo PLATFORM=$PLATFORM
+            docker buildx build --platform $PLATFORM --build-arg IMAGE=$IMAGE -t intersystemsdc/${{ matrix.image }}-zpm .
+      - name: inspect docker image size
+        run: |
+          docker history intersystemsdc/${{ matrix.image }}-zpm
+          docker images -f label=org.opencontainers.image.vendor=InterSystems
+      - name: push intersystemsdc/${{ matrix.image }}-zpm to docker hub
+        if: github.event.repository.fork == false
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker push intersystemsdc/${{ matrix.image }}-zpm
