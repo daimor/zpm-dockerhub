@@ -11,8 +11,8 @@ jobs:
           # - "iris-community:2020.3.0.221.0"
           # - "iris-community-arm64:2020.3.0.221.0"
           # # IRIS latest
-          - "iris-community:2020.4.0.524.0"
-          - "iris-community-arm64:2020.4.0.524.0"
+          - "iris-community:2021.1.0.205.0"
+          - "iris-community-arm64:2021.1.0.205.0"
           # # IRIS for Health previous
           # - "irishealth-community:2020.3.0.221.0"
           # - "irishealth-community-arm64:2020.3.0.221.0"
